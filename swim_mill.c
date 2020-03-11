@@ -1,31 +1,47 @@
- 
-#include <sys/ipc.h> 
-#include <stdio.h> 
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/sem.h>
+#include <sys/ipc.h>
 #include <sys/shm.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#define SHM_KEY 1246
+#define MAXSIZE     27
 
+char shared [10][10];
 
-int sharedSpace[10][10];
+void die(char *s)
+{
+    perror(s);
+    exit(1);
+}
 
-key_t key;
+int main()
+{
+    char c;
+    int shmid;
+    key_t key;
+    char (*shm)[10], *s;
 
-int main() 
-{ 
+    key = 5679;
 
+    //get shared mem id
+    if ((shmid = shmget(key,sizeof(shared), IPC_CREAT | 0666)) < 0)
+        die("shmget");
 
-	int shmid = shmget(key,sizeof(sharedSpace),IPC_CREAT|0666); 
+    //attach to the shared memory 
+    if ((shm = shmat(shmid, NULL, 0)) ==  -1)
+        die("shmat");
 
-	printf("%d", shmid);
+    //test
+    shm[0][1] = '*';
 
-	int  (*stream)[10] = shmat(shmid,NULL,0);
+    //run 
+    int run = 1;
 
-	stream[0][0] =1;
+    //keep program running
+    while(run){
+        scanf("%d",&run);
+        scanf("%c",&shm[0][1]);
+    }
 
-	shmdt(stream);
-
-	return 0; 
-} 
+    exit(0);
+}
