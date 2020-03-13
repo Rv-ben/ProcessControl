@@ -16,6 +16,10 @@ char (*stream)[10];
 //Pellet variables 
 int pelletPostions[2][20], nearestPellet_x, pelletsOnField = 0;
 
+//Shared mem variables 
+int shmid;
+key_t key = 5679;
+
 //kill 
 void die(char *s)
 {
@@ -114,23 +118,23 @@ void seek(){
     }
 }
 
-
-
-int main()
-{
-    int shmid;
-    key_t key;
-
-    key = 5679;
-
+//Attach to shared memory
+void connect(){
     //get shared mem id 
     if ((shmid = shmget(key,sizeof(char[10][10]), 0666)) < 0)
         die("shmget");
 
     //attach to the shared memory
     stream = shmat(shmid, NULL, 0);
+}
 
+
+
+int main()
+{
     spawnFish();
+
+    
     while(1){
         findAllPellets();
         findNearestPellet();
