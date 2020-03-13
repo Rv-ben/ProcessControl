@@ -39,16 +39,13 @@ void sideToSide(){
     while(1){
 
         for(int i = fishPos; i>0; i--){
-            printf("MoveLeft");
             moveLeft();
             sleep(2);
         }
         
         sleep(1);
-        printf("begin switch");
 
         for(int i = 0; i<10 ;i++){
-            printf("MoveRight");
             moveRight();
             sleep(2);
         }
