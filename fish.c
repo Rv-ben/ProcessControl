@@ -3,55 +3,118 @@
 #include <sys/shm.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define MAXSIZE     27
+#include <math.h>
+#define x 0
+#define y 1
 
-int fishPos = 10/2;
-char (*stream)[10], *s;
+//Fish Coordinates
+int fishPos_x= 10/2,fishPos_y =9;
 
+//Water Stream memory
+char (*stream)[10];
+
+//Pellet variables 
+int pelletPostions[2][20], nearestPellet_x, pelletsOnField = 0;
+
+//kill 
 void die(char *s)
 {
     perror(s);
     exit(1);
 }
 
-
+//Move left, sleep 2 secs
 void moveLeft(){
-    if(fishPos>0){
-        stream[9][fishPos] = '|';
-        fishPos--;
-        stream[9][fishPos] = '^';
+    if(fishPos_x>0){
+        stream[9][fishPos_x] = '|';
+        fishPos_x--;
+        stream[9][fishPos_x] = '^';
     }
+    sleep(2);
 }
 
+//Move right, sleep 2 secs
 void moveRight(){
-    if(fishPos<9){
-        stream[9][fishPos] = '|';
-        fishPos++;
-        stream[9][fishPos] = '^';
+    if(fishPos_x<9){
+        stream[9][fishPos_x] = '|';
+        fishPos_x++;
+        stream[9][fishPos_x] = '^';
+    }
+    sleep(2);
+}
+
+//Draw init position of fish in mem
+void spawnFish(){
+    stream[9][fishPos_x] = '^';
+}
+
+//Finds every pellet currently on the field, and stores every position
+void findAllPellets(){
+    pelletsOnField = 0;
+
+    for(int i = 0; i<10; i++){
+        for(int j= 0; j<10; j++){
+            if(stream[i][j] == 'o'){
+                pelletPostions[y][pelletsOnField] = i; //Capture y coord
+                pelletPostions[x][pelletsOnField] = j; //Capture x coord
+                pelletsOnField ++;
+            }
+        }
     }
 }
 
-void spawnFish(){
-    stream[9][fishPos] = '^';
+//Finds the nearest pellet to the fish
+void findNearestPellet(){
+
+    // in a grid of 10x10 the max length will not be > 25
+    int minLength = 25;
+    
+    //for each pellet on the field
+    for(int i = 0;i< pelletsOnField; i++){
+
+        int length_x = pelletPostions[x][i] - fishPos_x;
+        int length_y = pelletPostions[y][i] - fishPos_y;
+
+        //use the pyth theorem to find the actual distance 
+        double length = sqrt( pow(length_x,2) + pow(length_y,2) );
+        
+        //keep minimal distance
+        if(length<minLength){
+            minLength = length;
+            nearestPellet_x = pelletPostions[x][i];
+        }
+    }
+
 }
 
+//move side to side 
 void sideToSide(){
     while(1){
 
-        for(int i = fishPos; i>0; i--){
+        for(int i = fishPos_x; i>0; i--){
             moveLeft();
-            sleep(2);
         }
         
         sleep(1);
 
         for(int i = 0; i<10 ;i++){
             moveRight();
-            sleep(2);
         }
         
     }
 }
+
+//Move to nearest pellet
+void seek(){
+    if(pelletPostions!=0){
+        if( (fishPos_x - nearestPellet_x) > 0 )
+            moveLeft();
+        else if( (fishPos_x - nearestPellet_x < 0))
+            moveRight();
+    }
+}
+
+
 
 int main()
 {
@@ -68,8 +131,11 @@ int main()
     stream = shmat(shmid, NULL, 0);
 
     spawnFish();
-    sideToSide();
-
+    while(1){
+        findAllPellets();
+        findNearestPellet();
+        seek();
+    }
 
     exit(0);
 }
