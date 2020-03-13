@@ -13,7 +13,7 @@ int shmid;
 key_t key = 5679;
 char (*stream)[10];
 
-int pelletCount;
+int numOfProcess;
 
 //Kill proccess if error
 void die(char *s)
@@ -55,9 +55,14 @@ void connect(){
         die("shmat");
 }
 
-//spawn pellet
-void spawnPellet(){
+void spawnProcces(char * exeName){
+    numOfProcess = fork();
 
+    if(numOfProcess==0){
+        char *args[] = {exeName,NULL};
+        execvp(args[0],args);
+    }
+    printf("%d",numOfProcess);
 }
 
 int main()
@@ -66,8 +71,14 @@ int main()
     connect();
     fillStream();
 
+    sleep(2);
+
+    spawnProcces("./fish");
+    spawnProcces("./pellet");
+
     while(1){
         printStream();
+        printf("%d",numOfProcess);
     }
 
     exit(0);
