@@ -128,7 +128,7 @@ void connect(){
     stream = shmat(shmid, NULL, 0);
 }
 
-
+//test commit
 
 int main()
 {
