@@ -18,7 +18,7 @@ int pelletPostions[2][20], nearestPellet_x, pelletsOnField = 0;
 
 //Shared mem variables 
 int shmid;
-key_t key = 5679;
+key_t key = 5680;
 
 //kill 
 void die(char *s)
@@ -32,7 +32,7 @@ void moveLeft(){
     if(fishPos_x>0){
         stream[9][fishPos_x] = '|';
         fishPos_x--;
-        stream[9][fishPos_x] = '^';
+        stream[9][fishPos_x] = 'F';
     }
     sleep(2);
 }
@@ -42,14 +42,14 @@ void moveRight(){
     if(fishPos_x<9){
         stream[9][fishPos_x] = '|';
         fishPos_x++;
-        stream[9][fishPos_x] = '^';
+        stream[9][fishPos_x] = 'F';
     }
     sleep(2);
 }
 
 //Draw init position of fish in mem
 void spawnFish(){
-    stream[9][fishPos_x] = '^';
+    stream[9][fishPos_x] = 'F';
 }
 
 //Finds every pellet currently on the field, and stores every position
@@ -58,7 +58,7 @@ void findAllPellets(){
 
     for(int i = 0; i<10; i++){
         for(int j= 0; j<10; j++){
-            if(stream[i][j] == 'o'){
+            if(stream[i][j] == '0'){
                 pelletPostions[y][pelletsOnField] = i; //Capture y coord
                 pelletPostions[x][pelletsOnField] = j; //Capture x coord
                 pelletsOnField ++;
@@ -110,7 +110,7 @@ void sideToSide(){
 
 //Move to nearest pellet
 void seek(){
-    if(pelletPostions!=0){
+    if(pelletsOnField!=0){
         if( (fishPos_x - nearestPellet_x) > 0 )
             moveLeft();
         else if( (fishPos_x - nearestPellet_x < 0))
@@ -128,6 +128,11 @@ void connect(){
     stream = shmat(shmid, NULL, 0);
 }
 
+void checkIfEat(){
+    if (stream[fishPos_y][fishPos_x] == '0')
+        stream[fishPos_y][fishPos_x] = 'F';
+}
+
 //test commit
 
 int main()
@@ -141,6 +146,7 @@ int main()
         findAllPellets();
         findNearestPellet();
         seek();
+        checkIfEat();
     }
 
     exit(0);

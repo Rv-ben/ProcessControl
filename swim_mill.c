@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <pthread.h>
 #include <string.h>
 
 #define MAXSIZE     27
@@ -12,7 +13,7 @@
 char shared [10][10];
 char c;
 int shmid;
-key_t key = 5679;
+key_t key = 5680;
 char (*stream)[10];
 
 int numOfProcess;
@@ -42,7 +43,7 @@ void printStream(){
         }
         printf("\n");
     }
-    sleep(2);
+    sleep(1);
     printf("----------------------\n\n");
 }
 
@@ -58,29 +59,51 @@ void connect(){
 }
 
 //Returns a random coordinate given a bound
-char randomCord(int bound){
-    srand(time(0));
-    int ran = rand()%bound +48;
+int randomCord(int bound){
+    srand(time(NULL));
+    int ran = rand()%bound+1;
+    //printf("%c", (char)ran);
     return ran;
 }
 
-void spawnPellet(){
-    numOfProcess = fork();
+void * spawnPellet(){
+    int pid = fork();
     int err = 0;
 
     if(numOfProcess==0){
-        char *cmd[3];
+        
+        char coordY[2];
+        sprintf(coordY,"%d",randomCord(9));
+        
+        char coordX[2];
+        sprintf(coordX,"%d",randomCord(9));
 
-        cmd[0] = "./pellet";
-        cmd[1] = (char)53+"";
-        cmd[2] = (char)53+"";
+        //printf("Pellet dropped at y:%s x:%s",coordY,coordX);
 
-        err = execlp(cmd[0],cmd[1],cmd[2]);
+        char *cmd[] = {"./pellet",coordX,coordY,NULL};
+
+        err = execv(cmd[0],cmd);
 
         printf("%d",err);
     }
     
 
+}
+
+void * spawnFish(){
+    int fork_= fork();
+    
+    if(fork_==0){
+        char *cmd[3];
+
+        cmd[0] = "./fish";
+        if(numOfProcess != 19){
+            numOfProcess++;
+            execlp(cmd[0],NULL);
+            numOfProcess--;
+        }
+
+    }
 }
 
 int main()
@@ -90,10 +113,13 @@ int main()
     fillStream();
 
     sleep(2);
-    //spawnProcces("./fish");
-    spawnPellet();
+
+    spawnFish();
+
+
 
     while(1){
+        spawnPellet();
         printStream();
         printf("\n----------------------\n");
     }

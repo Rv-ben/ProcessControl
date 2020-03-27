@@ -13,7 +13,7 @@ int pellet_pos_x , pellet_pos_y;
 char shared [10][10];
 char c;
 int shmid;
-key_t key = 5679;
+key_t key = 5680;
 char (*stream)[10], *s;
 
 void die(char *s)
@@ -29,12 +29,13 @@ void connect(){
 
     //attach to the shared memory 
     stream = shmat(shmid, NULL, 0);
+    printf("%s",stream);
 }
 
 //place dot in the stream
 void spawnPellet(){
 
-    stream[pellet_pos_y][pellet_pos_x] = 'o';
+    stream[pellet_pos_y][pellet_pos_x] = '0';
 }
 
 //makes the pellet drop by updating it's position
@@ -43,7 +44,7 @@ void drop(){
     {   
         stream[pellet_pos_y][pellet_pos_x] = '|';
         pellet_pos_y++;
-        stream[pellet_pos_y][pellet_pos_x] = 'o';
+        stream[pellet_pos_y][pellet_pos_x] = '0';
         sleep(2);
     }
 
@@ -66,8 +67,8 @@ int parseNum(char* numStr){
 
 int main(int argc, char** argv){
 
-    pellet_pos_y = parseNum(argv[0]);
-    pellet_pos_x = parseNum(argv[1]);
+    pellet_pos_y = parseNum(argv[1]);
+    pellet_pos_x = parseNum(argv[2]);
 
     connect();
     spawnPellet();
