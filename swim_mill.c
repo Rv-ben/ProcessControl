@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
+#include <string.h>
 
 #define MAXSIZE     27
 
@@ -51,18 +53,34 @@ void connect(){
         die("shmget");
 
     //attach to the shared memory 
-    if ((stream= shmat(shmid, NULL, 0)) ==  -1)
-        die("shmat");
+    stream = shmat(shmid, NULL, 0);
+    
 }
 
-void spawnProcces(char * exeName){
+//Returns a random coordinate given a bound
+char randomCord(int bound){
+    srand(time(0));
+    int ran = rand()%bound +48;
+    return ran;
+}
+
+void spawnPellet(){
     numOfProcess = fork();
+    int err = 0;
 
     if(numOfProcess==0){
-        char *args[] = {exeName,NULL};
-        execvp(args[0],args);
+        char *cmd[3];
+
+        cmd[0] = "./pellet";
+        cmd[1] = (char)53+"";
+        cmd[2] = (char)53+"";
+
+        err = execlp(cmd[0],cmd[1],cmd[2]);
+
+        printf("%d",err);
     }
-    printf("%d",numOfProcess);
+    
+
 }
 
 int main()
@@ -72,13 +90,12 @@ int main()
     fillStream();
 
     sleep(2);
-
-    spawnProcces("./fish");
-    spawnProcces("./pellet");
+    //spawnProcces("./fish");
+    spawnPellet();
 
     while(1){
         printStream();
-        printf("%d",numOfProcess);
+        printf("\n----------------------\n");
     }
 
     exit(0);

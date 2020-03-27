@@ -132,8 +132,10 @@ void connect(){
 
 int main()
 {
+    connect();
     spawnFish();
 
+    printf("Spawned fish ok");
     
     while(1){
         findAllPellets();

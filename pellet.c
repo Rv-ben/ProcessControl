@@ -4,7 +4,9 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#include <time.h>
+#include <string.h>
+#include <math.h>
+
 
 int pellet_pos_x , pellet_pos_y;
 
@@ -26,19 +28,16 @@ void connect(){
         die("shmget");
 
     //attach to the shared memory 
-    if ((stream = shmat(shmid, NULL, 0)) ==  -1)
-        die("shmat");
+    stream = shmat(shmid, NULL, 0);
 }
 
+//place dot in the stream
 void spawnPellet(){
-    srand(time(0));
-    pellet_pos_x = rand()%9;
-    srand(time(0));
-    pellet_pos_y = rand()%9;
 
     stream[pellet_pos_y][pellet_pos_x] = 'o';
 }
 
+//makes the pellet drop by updating it's position
 void drop(){
     while (pellet_pos_y != 9 )
     {   
@@ -52,8 +51,23 @@ void drop(){
     
 }
 
+//parse a number given a string
+int parseNum(char* numStr){
+    int place = strlen(numStr);
+    int value = 0;
 
-int main(){
+    for(int i = 0; i<strlen(numStr); i++){
+        value += (numStr[i] - 48  )* pow(10,place-1);
+        place--;
+    }
+
+    return value;
+}
+
+int main(int argc, char** argv){
+
+    pellet_pos_y = parseNum(argv[0]);
+    pellet_pos_x = parseNum(argv[1]);
 
     connect();
     spawnPellet();
