@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <time.h>
 #include <pthread.h>
@@ -94,14 +95,13 @@ void * spawnPellet(){
         char *cmd[] = {"./pellet",coordX,coordY,NULL};
 
         err = execv(cmd[0],cmd);
-        exit(0);
     }
     else if(pid!=0 && numOfProcess<19) {
         proccess[pindex] = pid;
         pindex++;
 
         numOfProcess++;
-        //wait(NULL);
+        wait(NULL);
         numOfProcess--;
     }
     
@@ -119,28 +119,38 @@ void * spawnFish(){
         printf("Spawn fish failed err: %d ",err);
     }
     else{
+
         proccess[pindex] = pid;
         pindex++;
+
+        numOfProcess++;
+        wait(NULL);
+        numOfProcess--;
+    
     }
 }
 
 void handle_terminate(int sig){
 
-    printf("\nCaught: %d = Terminate\n",sig);
-
+    printf("\nCaught: %d = Terminate pindex=%d\n",sig,pindex);
+    
      for(int i=0; i<pindex; i++){
-        int status = kill(proccess[i],SIGKILL);
+        int status = kill(proccess[i],SIGINT);
         if(status == 0)
             printf("Killed process: %d",proccess[i]);
         else
             printf("err");
     }
 
+    printf("Processes Killed");
+
     _Exit(0);
 }
 
 int main()
 {
+
+    pthread_t threads[100];
 
     signal(SIGINT, handle_terminate);
 
@@ -149,11 +159,17 @@ int main()
 
     sleep(2);
 
-    spawnFish();
-    spawnPellet();
+    pthread_create(&threads[0],NULL,spawnFish,NULL);
+
+    int i= 0;
 
     while(1){
         printStream();
+        if(numOfProcess<19){
+            pthread_create(&threads[i],NULL,spawnPellet,NULL);
+            i++;
+        }
+
         printf("\n----------------------\n");
     }
 
