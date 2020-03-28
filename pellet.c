@@ -29,7 +29,6 @@ void connect(){
 
     //attach to the shared memory 
     stream = shmat(shmid, NULL, 0);
-    printf("%s",stream);
 }
 
 //place dot in the stream
@@ -73,5 +72,7 @@ int main(int argc, char** argv){
     connect();
     spawnPellet();
     drop();
-    
+
+    //exits and detaches from shared memory 
+    _exit(0);
 }

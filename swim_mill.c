@@ -1,12 +1,16 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/wait.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include <time.h>
 #include <pthread.h>
-#include <string.h>
+#include <signal.h>
+
 
 #define MAXSIZE     27
 
@@ -16,7 +20,10 @@ int shmid;
 key_t key = 5680;
 char (*stream)[10];
 
-int numOfProcess;
+int pindex = 0;
+
+int proccess[100]; 
+int numOfProcess=0;
 
 //Kill proccess if error
 void die(char *s)
@@ -44,7 +51,12 @@ void printStream(){
         printf("\n");
     }
     sleep(1);
-    printf("----------------------\n\n");
+    printf("----------------------\nCurrent amount of process: %d \n",numOfProcess);
+
+    for(int i=0; i<pindex;i++){
+        printf("Process number: %d\n",proccess[i]);
+    }
+    
 }
 
 //Create shared memory
@@ -68,46 +80,69 @@ int randomCord(int bound){
 
 void * spawnPellet(){
     int pid = fork();
+
     int err = 0;
 
-    if(numOfProcess==0){
-        
+    if(pid==0 && numOfProcess<18){
+
         char coordY[2];
         sprintf(coordY,"%d",randomCord(9));
         
         char coordX[2];
-        sprintf(coordX,"%d",randomCord(9));
-
-        //printf("Pellet dropped at y:%s x:%s",coordY,coordX);
-
+        printf(coordX,"%d",randomCord(9));
+    
         char *cmd[] = {"./pellet",coordX,coordY,NULL};
 
         err = execv(cmd[0],cmd);
+        exit(0);
+    }
+    else if(pid!=0 && numOfProcess<19) {
+        proccess[pindex] = pid;
+        pindex++;
 
-        printf("%d",err);
+        numOfProcess++;
+        //wait(NULL);
+        numOfProcess--;
     }
     
 
 }
 
 void * spawnFish(){
-    int fork_= fork();
+    int pid = fork();
     
-    if(fork_==0){
+    if(pid==0){
         char *cmd[3];
 
         cmd[0] = "./fish";
-        if(numOfProcess != 19){
-            numOfProcess++;
-            execlp(cmd[0],NULL);
-            numOfProcess--;
-        }
-
+        int err = execlp(cmd[0],cmd);
+        printf("Spawn fish failed err: %d ",err);
     }
+    else{
+        proccess[pindex] = pid;
+        pindex++;
+    }
+}
+
+void handle_terminate(int sig){
+
+    printf("\nCaught: %d = Terminate\n",sig);
+
+     for(int i=0; i<pindex; i++){
+        int status = kill(proccess[i],SIGKILL);
+        if(status == 0)
+            printf("Killed process: %d",proccess[i]);
+        else
+            printf("err");
+    }
+
+    _Exit(0);
 }
 
 int main()
 {
+
+    signal(SIGINT, handle_terminate);
 
     connect();
     fillStream();
@@ -115,14 +150,11 @@ int main()
     sleep(2);
 
     spawnFish();
-
-
+    spawnPellet();
 
     while(1){
-        spawnPellet();
         printStream();
         printf("\n----------------------\n");
     }
 
-    exit(0);
 }

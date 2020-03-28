@@ -3,7 +3,10 @@
 #include <sys/shm.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <math.h>
+
+
 #define x 0
 #define y 1
 
@@ -149,5 +152,6 @@ int main()
         checkIfEat();
     }
 
-    exit(0);
+    //exits and detaches from shared memory 
+    _Exit(0);
 }
