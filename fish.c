@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+#include <signal.h>
 
 
 #define x 0
@@ -138,8 +139,16 @@ void checkIfEat(){
 
 //test commit
 
+void handle_terminate(int sig){
+    printf("Fish terminated signal: %d",sig);
+    _Exit(0);
+}
+
 int main()
 {
+
+    signal(SIGINT, handle_terminate);
+
     connect();
     spawnFish();
 
