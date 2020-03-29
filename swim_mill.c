@@ -15,7 +15,7 @@
 
 #define MAXSIZE     27
 
-char shared [10][10];
+unsigned char shared [10][10];
 char c;
 int shmid;
 key_t key = 5680;
@@ -25,6 +25,8 @@ int pindex = 0;
 
 int proccess[100]; 
 int numOfProcess=0;
+
+FILE *file;
 
 //Kill proccess if error
 void die(char *s)
@@ -46,13 +48,13 @@ void fillStream(){
 void printStream(){
     for(int i = 0;i<10;i++){
         for(int j = 0; j<10;j++){
-            printf("%c",stream[i][j]);
-            printf(" ");
+            fprintf(file,"%c",stream[i][j]);
+            fprintf(file," ");
         }
-        printf("\n");
+        fprintf(file,"\n");
     }
     sleep(1);
-    printf("----------------------\nCurrent amount of process: %d \n",numOfProcess);
+    fprintf(file,"----------------------\nCurrent amount of process: %d \n",numOfProcess);
     
 }
 
@@ -130,7 +132,7 @@ void handle_terminate(int sig){
 
     printf("\nCaught: %d = Terminate pindex=%d\n",sig,pindex);
     
-     for(int i=0; i<pindex; i++){
+    for(int i=0; i<pindex; i++){
         int status = kill(proccess[i],SIGINT);
     }
 
@@ -139,11 +141,14 @@ void handle_terminate(int sig){
     //Remove the shared memory from the system
     shmctl(shmid,IPC_RMID,NULL);
 
+    fclose(file);
+
     _Exit(0);
 }
 
 int main()
 {
+    clock_t total_time = clock();
 
     pthread_t threads[100];
 
@@ -158,14 +163,24 @@ int main()
 
     int i= 0;
 
+    //Makes a new file or erases all content in com.txt
+    file = fopen("comp.txt","w");
+    fclose(file);
+
+    //makes the file able to append
+    file = fopen("comp.txt","a");
     while(1){
+        long int time = (total_time+=clock())/(CLOCKS_PER_SEC/250); 
         printStream();
         if(numOfProcess<20){
             pthread_create(&threads[i],NULL,spawnPellet,NULL);
             i++;
         }
+        fprintf(file,"Time: %ld \n", time);
+        if(clock()/CLOCKS_PER_SEC >30)
+            handle_terminate(1);
 
-        printf("\n----------------------\n");
+        fprintf(file,"\n----------------------\n");
     }
 
 }
