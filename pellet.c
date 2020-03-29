@@ -82,14 +82,12 @@ int main(int argc, char** argv){
 
     signal(SIGINT, handle_terminate);
 
-    fprintf(stderr,"Spawned fish pid: %d   x:%d   y:%d \n",getpid(),parseNum(argv[2]),parseNum(argv[1]));
-
     pellet_pos_y = parseNum(argv[1]);
     pellet_pos_x = parseNum(argv[2]);
 
     connect();
     spawnPellet();
-    fprintf(stderr,"Spawned fish pid: %d   x:%d   y:%d \n",getpid(),pellet_pos_x, pellet_pos_y);
+    fprintf(stderr,"Spawned pellet pid: %d   x:%d   y:%d \n",getpid(),pellet_pos_x, pellet_pos_y);
     drop();
 
     //exits and detaches from shared memory 

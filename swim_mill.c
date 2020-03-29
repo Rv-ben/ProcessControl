@@ -13,8 +13,6 @@
 #include <signal.h>
 
 
-#define MAXSIZE     27
-
 unsigned char shared [10][10];
 char c;
 int shmid;
@@ -72,8 +70,7 @@ void connect(){
 //Returns a random coordinate given a bound
 int randomCord(int bound){
     srand(time(NULL));
-    int ran = rand()%bound+1;
-    //printf("%c", (char)ran);
+    int ran = rand()%bound;
     return ran;
 }
 
@@ -146,22 +143,26 @@ void handle_terminate(int sig){
     _Exit(0);
 }
 
+void * timer(){
+    sleep(30);
+    handle_terminate(1);
+}
+
 int main()
 {
-    clock_t total_time = clock();
 
     pthread_t threads[100];
+
+    pthread_create(&threads[0],NULL,timer,NULL);
 
     signal(SIGINT, handle_terminate);
 
     connect();
     fillStream();
 
-    sleep(2);
+    pthread_create(&threads[1],NULL,spawnFish,NULL);
 
-    pthread_create(&threads[0],NULL,spawnFish,NULL);
-
-    int i= 0;
+    int i= 2;
 
     //Makes a new file or erases all content in com.txt
     file = fopen("comp.txt","w");
@@ -169,16 +170,15 @@ int main()
 
     //makes the file able to append
     file = fopen("comp.txt","a");
+
     while(1){
-        long int time = (total_time+=clock())/(CLOCKS_PER_SEC/250); 
+
         printStream();
-        if(numOfProcess<20){
+
+        if(numOfProcess<20 && randomCord(5) == 3){
             pthread_create(&threads[i],NULL,spawnPellet,NULL);
             i++;
         }
-        fprintf(file,"Time: %ld \n", time);
-        if(clock()/CLOCKS_PER_SEC >30)
-            handle_terminate(1);
 
         fprintf(file,"\n----------------------\n");
     }
