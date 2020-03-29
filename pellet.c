@@ -11,7 +11,7 @@
 
 int pellet_pos_x , pellet_pos_y;
 
-char shared [10][10];
+unsigned char shared [10][10];
 char c;
 int shmid;
 key_t key = 5680;
@@ -35,7 +35,7 @@ void connect(){
 //place dot in the stream
 void spawnPellet(){
 
-    stream[pellet_pos_y][pellet_pos_x] = '0';
+    stream[pellet_pos_y][pellet_pos_x] = 0x80;
 }
 
 //makes the pellet drop by updating it's position
@@ -44,10 +44,18 @@ void drop(){
     {   
         stream[pellet_pos_y][pellet_pos_x] = '|';
         pellet_pos_y++;
-        stream[pellet_pos_y][pellet_pos_x] = '0';
+        stream[pellet_pos_y][pellet_pos_x] = 0x80;
         sleep(2);
+        
+        if(stream[pellet_pos_y][pellet_pos_x] == 'F'){
+            stream[pellet_pos_y][pellet_pos_x] |= 0x80;
+            fprintf(stderr,"I got ate! pid: %d \n",getpid());
+            _Exit(0);
+        }
+        
     }
 
+    fprintf(stderr,"I was missed! pid: %d \n",getpid());
     stream[pellet_pos_y][pellet_pos_x] = '|';
     
 }

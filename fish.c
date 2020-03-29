@@ -62,7 +62,7 @@ void findAllPellets(){
 
     for(int i = 0; i<10; i++){
         for(int j= 0; j<10; j++){
-            if(stream[i][j] == '0'){
+            if(stream[i][j] == -0x80){
                 pelletPostions[y][pelletsOnField] = i; //Capture y coord
                 pelletPostions[x][pelletsOnField] = j; //Capture x coord
                 pelletsOnField ++;
@@ -125,7 +125,7 @@ void seek(){
 //Attach to shared memory
 void connect(){
     //get shared mem id 
-    if ((shmid = shmget(key,sizeof(char[10][10]), 0666)) < 0)
+    if ((shmid = shmget(key,sizeof(unsigned char[10][10]), 0666)) < 0)
         die("shmget");
 
     //attach to the shared memory
