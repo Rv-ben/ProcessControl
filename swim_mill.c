@@ -88,7 +88,7 @@ void * spawnPellet(){
         sprintf(coordY,"%d",randomCord(9));
         
         char coordX[2];
-        printf(coordX,"%d",randomCord(9));
+        sprintf(coordX,"%d",randomCord(9));
     
         char *cmd[] = {"./pellet",coordX,coordY,NULL};
 
