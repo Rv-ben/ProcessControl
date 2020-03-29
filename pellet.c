@@ -89,6 +89,7 @@ int main(int argc, char** argv){
 
     connect();
     spawnPellet();
+    fprintf(stderr,"Spawned fish pid: %d   x:%d   y:%d \n",getpid(),pellet_pos_x, pellet_pos_y);
     drop();
 
     //exits and detaches from shared memory 
