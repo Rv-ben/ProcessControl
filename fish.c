@@ -132,16 +132,11 @@ void connect(){
     stream = shmat(shmid, NULL, 0);
 }
 
-void checkIfEat(){
-    if (stream[fishPos_y][fishPos_x] == '0')
-        stream[fishPos_y][fishPos_x] = 'F';
-}
-
 //test commit
 
 void handle_terminate(int sig){
-    printf("Fish terminated signal: %d",sig);
-    _Exit(0);
+    fprintf(stderr,"Fish terminated id:%d signal: %d\n",getpid(),sig);
+    _Exit(0); 
 }
 
 int main()
@@ -158,9 +153,5 @@ int main()
         findAllPellets();
         findNearestPellet();
         seek();
-        checkIfEat();
     }
-
-    //exits and detaches from shared memory 
-    _Exit(0);
 }

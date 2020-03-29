@@ -53,10 +53,6 @@ void printStream(){
     }
     sleep(1);
     printf("----------------------\nCurrent amount of process: %d \n",numOfProcess);
-
-    for(int i=0; i<pindex;i++){
-        printf("Process number: %d\n",proccess[i]);
-    }
     
 }
 
@@ -84,7 +80,7 @@ void * spawnPellet(){
 
     int err = 0;
 
-    if(pid==0 && numOfProcess<18){
+    if(pid==0){
 
         char coordY[2];
         sprintf(coordY,"%d",randomCord(9));
@@ -96,7 +92,7 @@ void * spawnPellet(){
 
         err = execv(cmd[0],cmd);
     }
-    else if(pid!=0 && numOfProcess<19) {
+    else if(pid!=0) {
         proccess[pindex] = pid;
         pindex++;
 
@@ -115,7 +111,7 @@ void * spawnFish(){
         char *cmd[3];
 
         cmd[0] = "./fish";
-        int err = execlp(cmd[0],cmd);
+        int err = execlp(cmd[0],cmd[0]);
         printf("Spawn fish failed err: %d ",err);
     }
     else{
@@ -136,13 +132,12 @@ void handle_terminate(int sig){
     
      for(int i=0; i<pindex; i++){
         int status = kill(proccess[i],SIGINT);
-        if(status == 0)
-            printf("Killed process: %d",proccess[i]);
-        else
-            printf("err");
     }
 
-    printf("Processes Killed");
+    fprintf(stderr, "\n");
+
+    //Remove the shared memory from the system
+    shmctl(shmid,IPC_RMID,NULL);
 
     _Exit(0);
 }
@@ -165,7 +160,7 @@ int main()
 
     while(1){
         printStream();
-        if(numOfProcess<19){
+        if(numOfProcess<20){
             pthread_create(&threads[i],NULL,spawnPellet,NULL);
             i++;
         }

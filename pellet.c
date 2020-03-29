@@ -6,6 +6,7 @@
 #include <sys/shm.h>
 #include <string.h>
 #include <math.h>
+#include <signal.h>
 
 
 int pellet_pos_x , pellet_pos_y;
@@ -64,7 +65,16 @@ int parseNum(char* numStr){
     return value;
 }
 
+void handle_terminate(int sig){
+    fprintf(stderr,"Pellet terminated id: %d  signal: %d\n",getpid(),sig);
+    _Exit(0);
+}
+
 int main(int argc, char** argv){
+
+    signal(SIGINT, handle_terminate);
+
+    fprintf(stderr,"Spawned fish pid: %d   x:%d   y:%d \n",getpid(),parseNum(argv[2]),parseNum(argv[1]));
 
     pellet_pos_y = parseNum(argv[1]);
     pellet_pos_x = parseNum(argv[2]);
