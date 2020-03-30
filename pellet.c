@@ -55,7 +55,7 @@ void drop(){
         stream[pellet_pos_y][pellet_pos_x] = 0x80;
 
         //Sleep so pellet can be slower than fish
-        sleep(1);
+        sleep(2);
 
         //If fish and pellet have same pos, then indicate that it was eaten
         if(stream[pellet_pos_y][pellet_pos_x] == 'F'){

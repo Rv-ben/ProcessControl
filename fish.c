@@ -113,6 +113,7 @@ void seek(){
         else if( (fishPos_x - nearestPellet_x < 0))
             moveRight();
     }
+    sleep(2);
 }
 
 //Attach to shared memory
