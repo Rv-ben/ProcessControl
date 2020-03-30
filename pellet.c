@@ -8,88 +8,89 @@
 #include <math.h>
 #include <signal.h>
 
+#define size 15
 
+//X Y positions
 int pellet_pos_x , pellet_pos_y;
 
-unsigned char shared [10][10];
-char c;
+//Shared memory variables
 int shmid;
 key_t key = 5680;
-char (*stream)[10], *s;
+char (*stream)[size];
 
 void die(char *s)
 {
+    //prints error and kills process
     perror(s);
-    exit(1);
+    exit(3); //Exit stat 3
 }
 
 void connect(){
-    //get shared mem id
-    if ((shmid = shmget(key,sizeof(shared), IPC_CREAT | 0666)) < 0)
+    //get and id for the shared memory given size, shmget 
+    if ((shmid = shmget(key,sizeof(unsigned char [size][size]), IPC_CREAT | 0666)) < 0)
         die("shmget");
 
     //attach to the shared memory 
     stream = shmat(shmid, NULL, 0);
+
+    //if shmat is unsuccesful, it returns a (void*) -1
+    if(stream == (void *)-1)
+        die("shmat");
 }
 
 //place dot in the stream
 void spawnPellet(){
-
     stream[pellet_pos_y][pellet_pos_x] = 0x80;
 }
 
 //makes the pellet drop by updating it's position
 void drop(){
-    while (pellet_pos_y != 9 )
+
+    //While not at the bottom
+    while (pellet_pos_y != size-1 )
     {   
-        stream[pellet_pos_y][pellet_pos_x] = '|';
+        //Keep updating it's pos to drop
+        stream[pellet_pos_y][pellet_pos_x] = '-';
         pellet_pos_y++;
         stream[pellet_pos_y][pellet_pos_x] = 0x80;
-        sleep(2);
-        
+
+        //Sleep so pellet can be slower than fish
+        sleep(1);
+
+        //If fish and pellet have same pos, then indicate that it was eaten
         if(stream[pellet_pos_y][pellet_pos_x] == 'F'){
-            stream[pellet_pos_y][pellet_pos_x] |= 0x80;
+            stream[pellet_pos_y][pellet_pos_x] |= 0x80; //Bit wise or so we can return to 'F'
             fprintf(stderr,"I got ate! pid: %d \n",getpid());
-            _Exit(0);
+            _Exit(0); //Exit stat 0 if ate
         }
         
     }
-
-    fprintf(stderr,"I was missed! pid: %d \n",getpid());
-    stream[pellet_pos_y][pellet_pos_x] = '|';
+    fprintf(stderr,"I was missed! pid: %d \n",getpid()); 
+    stream[pellet_pos_y][pellet_pos_x] = '-';
     
 }
 
-//parse a number given a string
-int parseNum(char* numStr){
-    int place = strlen(numStr);
-    int value = 0;
-
-    for(int i = 0; i<strlen(numStr); i++){
-        value += (numStr[i] - 48  )* pow(10,place-1);
-        place--;
-    }
-
-    return value;
-}
-
+//Terminates if SIG_INT is sent
 void handle_terminate(int sig){
     fprintf(stderr,"Pellet terminated id: %d  signal: %d\n",getpid(),sig);
-    _Exit(0);
+    _Exit(4); //EXIT STATUS 4 to indicate it was inturrupted
 }
 
 int main(int argc, char** argv){
 
+    //Tell the process how to handle the interupt, in my case send it to "Handle_terminate"
     signal(SIGINT, handle_terminate);
 
-    pellet_pos_y = parseNum(argv[1]);
-    pellet_pos_x = parseNum(argv[2]);
+    //Parse arguments into place
+    pellet_pos_y = atoi(argv[1]);
+    pellet_pos_x = atoi(argv[2]);
 
-    connect();
-    spawnPellet();
+    connect();// Attach to shared mem
+    spawnPellet(); //Set init pos of pellet
+    //Print to Stderr
     fprintf(stderr,"Spawned pellet pid: %d   x:%d   y:%d \n",getpid(),pellet_pos_x, pellet_pos_y);
-    drop();
+    drop(); //Drop the pellet
 
     //exits and detaches from shared memory 
-    _exit(0);
-}
+    _Exit(1); //Exit stat 1 since it was eaten
+} 
