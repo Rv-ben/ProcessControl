@@ -7,6 +7,13 @@
 #include <math.h>
 #include <signal.h>
 
+#include <sys/sem.h>
+
+struct sembuf p = { 0, -1, SEM_UNDO}; //semwait
+struct sembuf v = { 0, +1, SEM_UNDO}; //semsignal
+
+int semid;
+key_t semKey = 5681;
 
 #define x 0
 #define y 1
@@ -59,7 +66,18 @@ void moveRight(){
 
 //Draw init position of fish in mem
 void spawnFish(){
+
+    //preform operation on semaphone
+    //Params: semID | Down Operation | num of operations
+    if(semop(semid,&p,0) < 0)
+            die("semop");
+
     stream[size-1][fishPos_x] = 'F';
+
+    //preform operation on semaphone
+    //Params: semID | UP Operation | num of operations
+    if(semop(semid,&v,0)<0)
+        die("semop");
 }
 
 //Finds every pellet currently on the field, and stores every position
@@ -129,6 +147,13 @@ void connect(){
     //if shmat is unsuccesful, it returns a (void*) -1
     if(stream == (void *)-1)
         die("shmat");
+
+    //get semaphore ID, PARMS: semkey | num of semaphores | protection mode rw 
+    //returns -1 if failed
+    if(semid = semget(semKey,1, 0666) < 0){
+        die("semget");
+    }
+
 }
 
 //test commit
@@ -150,8 +175,19 @@ int main()
     spawnFish();//Sets init pos of fish
     
     while(1){
+
+        //preform operation on semaphone
+        //Params: semID | Down Operation | num of operations
+        if(semop(semid,&p,0) < 0)
+            die("semop");
+
         findAllPellets();//Scan the double array
         findNearestPellet(); //Compute the nearest 
         seek(); //Seek nearest
+
+        //preform operation on semaphone
+        //Params: semID | UP Operation | num of operations
+        if(semop(semid,&v,0)<0)
+            die("semop");
     }
 }

@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/sem.h>
 #include <string.h>
 #include <math.h>
 #include <signal.h>
@@ -15,8 +16,13 @@ int pellet_pos_x , pellet_pos_y;
 
 //Shared memory variables
 int shmid;
+int semid;
 key_t key = 5680;
+key_t semKey = 5681;
 char (*stream)[size];
+
+struct sembuf p = { 0, -1, SEM_UNDO}; //semwait
+struct sembuf v = { 0, +1, SEM_UNDO}; //semsignal
 
 void die(char *s)
 {
@@ -36,26 +42,39 @@ void connect(){
     //if shmat is unsuccesful, it returns a (void*) -1
     if(stream == (void *)-1)
         die("shmat");
+    
+    //get semaphore ID, PARMS: semkey | num of semaphores | protection mode rw 
+    //returns -1 if failed
+    if(semid = semget(semKey,1, 0666) < 0){
+        die("semget");
+    }
+
 }
 
 //place dot in the stream
 void spawnPellet(){
+    //preform operation on semaphone
+    //Params: semID | UP Operation | num of operations
+    if(semop(semid,&v,0)<0)
+        die("semop");
+        
     stream[pellet_pos_y][pellet_pos_x] = 0x80;
+
+    //preform operation on semaphone
+    //Params: semID | UP Operation | num of operations
+    if(semop(semid,&v,0)<0)
+        die("semop");
 }
 
 //makes the pellet drop by updating it's position
 void drop(){
 
     //While not at the bottom
-    while (pellet_pos_y != size-1 )
+    while (pellet_pos_y != size-1)
     {   
         //Keep updating it's pos to drop
         stream[pellet_pos_y][pellet_pos_x] = '-';
         pellet_pos_y++;
-        stream[pellet_pos_y][pellet_pos_x] = 0x80;
-
-        //Sleep so pellet can be slower than fish
-        sleep(2);
 
         //If fish and pellet have same pos, then indicate that it was eaten
         if(stream[pellet_pos_y][pellet_pos_x] == 'F'){
@@ -63,6 +82,11 @@ void drop(){
             fprintf(stderr,"I got ate! pid: %d \n",getpid());
             _Exit(0); //Exit stat 0 if ate
         }
+
+        stream[pellet_pos_y][pellet_pos_x] = 0x80;
+
+        //Sleep so pellet can be slower than fish
+        sleep(2);
         
     }
     fprintf(stderr,"I was missed! pid: %d \n",getpid()); 
@@ -89,7 +113,19 @@ int main(int argc, char** argv){
     spawnPellet(); //Set init pos of pellet
     //Print to Stderr
     fprintf(stderr,"Spawned pellet pid: %d   x:%d   y:%d \n",getpid(),pellet_pos_x, pellet_pos_y);
+
+    //preform operation on semaphone
+    //Params: semID | Down Operation | num of operations
+    if(semop(semid,&p,0) < 0)
+        die("semop");
+    
+    //Critical section
     drop(); //Drop the pellet
+
+    //preform operation on semaphone
+    //Params: semID | UP Operation | num of operations
+    if(semop(semid,&v,0)<0)
+        die("semop");
 
     //exits and detaches from shared memory 
     _Exit(1); //Exit stat 1 since it was eaten

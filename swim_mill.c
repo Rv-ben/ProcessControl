@@ -12,10 +12,14 @@
 #include <pthread.h>
 #include <signal.h>
 
+#include <sys/sem.h>
+
 #define size  15
 
 //Shared memory variables
 int shmid;
+int semid;
+key_t semKey = 5681;
 key_t key = 5680;
 char (*stream)[size];
 
@@ -26,6 +30,16 @@ int numOfProcess=0;
 
 //File to write and append to
 FILE *file;
+
+
+struct sembuf p = { 0, -1, SEM_UNDO}; //semwait
+struct sembuf v = { 0, +1, SEM_UNDO}; //semsignal
+
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short  *array;
+};
 
 //Kill proccess if error
 void die(char *s)
@@ -73,6 +87,19 @@ void connect(){
     //if shmat is unsuccesful, it returns a (void*) -1
     if(stream == (void *)-1)
         die("shmat");
+        
+    if(semid = semget(semKey,1, IPC_CREAT | 0666) < 0){
+        die("Semget");
+    }
+
+    union semun u;
+    u.val = 1;
+
+    if ( semctl( semid,0,SETVAL,u) < 0){
+        die("semctl");
+    }
+
+
     
 }
 
@@ -212,7 +239,6 @@ void * timer(){
 
 int main()
 {
-    printf("HERE");
     pthread_t threads[100]; //Threads that can be used to wait for processes
 
     signal(SIGINT, handle_terminate);//Tell the process how to handle the interupt, in my case send it to "Handle_terminate"
@@ -235,7 +261,18 @@ int main()
 
     while(1){
 
+        //preform operation on semaphone
+        //Params: semID | Down Operation | num of operations
+        if(semop(semid,&p,0) < 0)
+            die("semop");
+
         printStream(); //Print the contents to a file
+
+        //preform operation on semaphone
+        //Params: semID | UP Operation | num of operations
+        if(semop(semid,&v,0)<0)
+            die("semop");
+
         sleep(1);//Sleep makes it pretty
 
         //if we have less than 20 processes then its ok to spawn more
