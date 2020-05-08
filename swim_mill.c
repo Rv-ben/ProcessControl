@@ -88,7 +88,7 @@ void connect(){
     if(stream == (void *)-1)
         die("shmat");
         
-    if(semid = semget(semKey,1, IPC_CREAT | 0666) < 0){
+    if(semid = semget(semKey,1, 0666 | IPC_CREAT) < 0){
         die("Semget");
     }
 
@@ -263,14 +263,14 @@ int main()
 
         //preform operation on semaphone
         //Params: semID | Down Operation | num of operations
-        if(semop(semid,&p,0) < 0)
+        if(semop(semid,&p,1) < 0)
             die("semop");
 
         printStream(); //Print the contents to a file
 
         //preform operation on semaphone
         //Params: semID | UP Operation | num of operations
-        if(semop(semid,&v,0)<0)
+        if(semop(semid,&v,1)<0)
             die("semop");
 
         sleep(1);//Sleep makes it pretty

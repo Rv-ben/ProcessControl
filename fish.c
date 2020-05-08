@@ -69,14 +69,14 @@ void spawnFish(){
 
     //preform operation on semaphone
     //Params: semID | Down Operation | num of operations
-    if(semop(semid,&p,0) < 0)
+    if(semop(semid,&p,1) < 0)
             die("semop");
 
     stream[size-1][fishPos_x] = 'F';
 
     //preform operation on semaphone
     //Params: semID | UP Operation | num of operations
-    if(semop(semid,&v,0)<0)
+    if(semop(semid,&v,1)<0)
         die("semop");
 }
 
@@ -178,7 +178,7 @@ int main()
 
         //preform operation on semaphone
         //Params: semID | Down Operation | num of operations
-        if(semop(semid,&p,0) < 0)
+        if(semop(semid,&p,1) < 0)
             die("semop");
 
         findAllPellets();//Scan the double array
@@ -187,7 +187,7 @@ int main()
 
         //preform operation on semaphone
         //Params: semID | UP Operation | num of operations
-        if(semop(semid,&v,0)<0)
+        if(semop(semid,&v,1)<0)
             die("semop");
     }
 }

@@ -55,14 +55,14 @@ void connect(){
 void spawnPellet(){
     //preform operation on semaphone
     //Params: semID | UP Operation | num of operations
-    if(semop(semid,&v,0)<0)
+    if(semop(semid,&v,1)<0)
         die("semop");
-        
+
     stream[pellet_pos_y][pellet_pos_x] = 0x80;
 
     //preform operation on semaphone
     //Params: semID | UP Operation | num of operations
-    if(semop(semid,&v,0)<0)
+    if(semop(semid,&v,1)<0)
         die("semop");
 }
 
@@ -116,7 +116,7 @@ int main(int argc, char** argv){
 
     //preform operation on semaphone
     //Params: semID | Down Operation | num of operations
-    if(semop(semid,&p,0) < 0)
+    if(semop(semid,&p,1) < 0)
         die("semop");
     
     //Critical section
@@ -124,7 +124,7 @@ int main(int argc, char** argv){
 
     //preform operation on semaphone
     //Params: semID | UP Operation | num of operations
-    if(semop(semid,&v,0)<0)
+    if(semop(semid,&v,1)<0)
         die("semop");
 
     //exits and detaches from shared memory 
