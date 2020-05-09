@@ -45,7 +45,7 @@ void connect(){
     
     //get semaphore ID, PARMS: semkey | num of semaphores | protection mode rw 
     //returns -1 if failed
-    if(semid = semget(semKey,1, 0666) < 0){
+    if(semid = semget(semKey,1, IPC_EXCL) < 0){
         die("semget");
     }
 
@@ -55,7 +55,7 @@ void connect(){
 void spawnPellet(){
     //preform operation on semaphone
     //Params: semID | UP Operation | num of operations
-    if(semop(semid,&v,1)<0)
+    if(semop(semid,&p,1)<0)
         die("semop");
 
     stream[pellet_pos_y][pellet_pos_x] = 0x80;
